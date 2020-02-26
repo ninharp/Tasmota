@@ -524,6 +524,7 @@
 //      #define USE_DISPLAY_ILI9488                // [DisplayModel 8] [I2cDriver38] (Touch)
 //      #define USE_DISPLAY_SSD1351                // [DisplayModel 9]
 //      #define USE_DISPLAY_RA8876                 // [DisplayModel 10] [I2cDriver39] (Touch)
+      #define USE_DISPLAY_MAX7219                // [DisplayModel 11] Enable MAX7219 8x8 Matrix with Parola Lirary support
   #endif  // USE_NRF24
 #endif  // USE_SPI
 
