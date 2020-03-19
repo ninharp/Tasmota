@@ -26,6 +26,11 @@
   HSPI MOSI	7	GPIO13
 */
 
+#define USE_SPI
+#define USE_DISPLAY
+#define USE_DISPLAY_MAX7219
+#define USE_DISPLAY_MODES1TO5
+
 #ifdef USE_SPI
 #ifdef USE_DISPLAY
 #ifdef USE_DISPLAY_MAX7219
@@ -48,6 +53,17 @@
 
 MD_Parola *P;
 
+class MAX7219_renderer {
+  private:
+    MD_Parola *max7219;
+  public:
+    MAX7219_renderer(MD_Parola*);
+
+  MAX7219_renderer(MD_Parola *rdr) {
+    max7219 = rdr;
+  }
+};
+
 /*********************************************************************************************/
 
 void MAX7219InitDriver(void)
@@ -58,7 +74,7 @@ void MAX7219InitDriver(void)
     //Settings.display_cols[2] = 0;
     Settings.display_model = XDSP_11;
   }
-
+  
   if (XDSP_11 == Settings.display_model) {
     uint8_t deviceCount = (uint8_t)Settings.display_cols[0];
     if  ((pin[GPIO_SPI_CS]<99) && (pin[GPIO_SPI_MOSI]<99) && (pin[GPIO_SPI_CLK]<99)){
@@ -100,7 +116,12 @@ void MAX7219_resetMatrix(void) {
 
 void MAX7219_matrixOnOff(void)
 {
-  if (!disp_power) { P->displayClear(); }
+  if (disp_power > 0) {
+    P->setIntensity(map(disp_power, 0, 100, 0, 15));
+    P->displayShutdown(false);
+  } else {
+    P->displayShutdown(!disp_power);
+  }
 }
 
 /*********************************************************************************************/
@@ -207,7 +228,9 @@ bool Xdsp11(uint8_t function) {
       MAX7219InitDriver();
     }
     else if (XDSP_11 == Settings.display_model) {
-
+      if (function != FUNC_DISPLAY_EVERY_50_MSECOND && function != FUNC_DISPLAY_EVERY_SECOND) {
+        AddLog_P2(LOG_LEVEL_DEBUG, PSTR(D_LOG_DEBUG "Triggered Function: %d"), function);
+      }
       switch (function) {
         case FUNC_DISPLAY_MODEL:
           result = true;
@@ -223,25 +246,19 @@ bool Xdsp11(uint8_t function) {
           MAX7219_resetMatrix();
           break;
         case FUNC_DISPLAY_DRAW_STRING:
-          MAX7219_resetMatrix();
           P->print(dsp_str);
           //Ili9341DrawStringAt(dsp_x, dsp_y, dsp_str, dsp_color, dsp_flag);
           break;
         case FUNC_DISPLAY_ONOFF:
-          P->displayShutdown(dsp_on);
-          //Ili9341DisplayOnOff(dsp_on);
+          P->displayShutdown(!dsp_on);
           break;
-        case FUNC_DISPLAY_ROTATION:
-          //tft->setRotation(Settings.display_rotate);
-          break;
-        case FUNC_DISPLAY_DIMMER:
-          P->setIntensity(Settings.display_dimmer);
+        case FUNC_DISPLAY_EVERY_50_MSECOND:
+          P->displayAnimate();
           break;
 #ifdef USE_DISPLAY_MODES1TO5
         case FUNC_DISPLAY_EVERY_SECOND:
           MAX7219_refreshMatrix();
           //Ili9341Refresh();
-          //P.displayAnimate();
           break;
 #endif  // USE_DISPLAY_MODES1TO5
       }

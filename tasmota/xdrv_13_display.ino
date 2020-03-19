@@ -71,7 +71,7 @@ enum XdspFunctions { FUNC_DISPLAY_INIT_DRIVER, FUNC_DISPLAY_INIT, FUNC_DISPLAY_E
                      FUNC_DISPLAY_DRAW_HLINE, FUNC_DISPLAY_DRAW_VLINE, FUNC_DISPLAY_DRAW_LINE,
                      FUNC_DISPLAY_DRAW_CIRCLE, FUNC_DISPLAY_FILL_CIRCLE,
                      FUNC_DISPLAY_DRAW_RECTANGLE, FUNC_DISPLAY_FILL_RECTANGLE,
-                     FUNC_DISPLAY_TEXT_SIZE, FUNC_DISPLAY_FONT_SIZE, FUNC_DISPLAY_ROTATION, FUNC_DISPLAY_DRAW_STRING, FUNC_DISPLAY_ONOFF, FUNC_DISPLAY_DIMMER };
+                     FUNC_DISPLAY_TEXT_SIZE, FUNC_DISPLAY_FONT_SIZE, FUNC_DISPLAY_ROTATION, FUNC_DISPLAY_DRAW_STRING, FUNC_DISPLAY_ONOFF };
 
 enum DisplayInitModes { DISPLAY_INIT_MODE, DISPLAY_INIT_PARTIAL, DISPLAY_INIT_FULL };
 
@@ -227,12 +227,6 @@ void DisplaySetRotation(uint8_t rotation)
 {
   Settings.display_rotate = rotation &3;
   XdspCall(FUNC_DISPLAY_ROTATION);
-}
-
-void DisplaySetDimmer(uint8_t dimmer)
-{
-  Settings.display_dimmer = dimmer &3;
-  XdspCall(FUNC_DISPLAY_DIMMER);
 }
 
 void DisplayDrawStringAt(uint16_t x, uint16_t y, char *str, uint16_t color, uint8_t flag)
@@ -675,11 +669,14 @@ void DisplayText(void)
             else DisplaySetRotation(*cp&3);
             cp+=1;
             break;
+#ifdef USE_DISPLAY_MAX7219
           case 'H':
             // luminosity (only MAX7219)
-            DisplaySetDimmer(*cp&7);
-            cp+=1;
+            //DisplaySetDimmer(*cp);
+            
+            //cp+=1;
             break;
+#endif
 
 #ifdef USE_GRAPH
           case 'G':
@@ -1294,7 +1291,7 @@ void DisplaySetPower(void)
 {
   disp_power = bitRead(XdrvMailbox.index, disp_device -1);
 
-//AddLog_P2(LOG_LEVEL_DEBUG, PSTR("DSP: Power %d"), disp_power);
+//  AddLog_P2(LOG_LEVEL_DEBUG, PSTR("DSP: Power %d"), disp_power);
 
   if (Settings.display_model) {
     if (!renderer) {
