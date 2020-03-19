@@ -79,6 +79,7 @@
 #define D_DATA "Datos"
 #define D_DARKLIGHT "Oscuro"
 #define D_DEBUG "Debug"
+#define D_DEWPOINT "Dew point"
 #define D_DISABLED "Deshabilitado"
 #define D_DISTANCE "Distancia"
 #define D_DNS_SERVER "Servidor DNS"
@@ -504,15 +505,33 @@
 
 //xsns_35_tx20.ino
 #define D_TX20_WIND_DIRECTION "Dirección del Viento"
-#define D_TX20_WIND_DEGREES "Ángulo del Viento"
 #define D_TX20_WIND_SPEED "Vel. del Viento"
-#define D_TX20_WIND_SPEED_AVG "Vel. Prom. del Viento"
 #define D_TX20_WIND_SPEED_MIN "Vel. Min. del Viento"
 #define D_TX20_WIND_SPEED_MAX "Vel. Max. del Viento"
 #define D_TX20_NORTH "N"
 #define D_TX20_EAST "E"
 #define D_TX20_SOUTH "S"
 #define D_TX20_WEST "O"
+
+// xsns_53_sml.ino
+#define D_TPWRIN "Energía Total-Entrada"
+#define D_TPWROUT "Energía Total-Salida"
+#define D_TPWRCURR "Potencia-En/Sal"
+#define D_TPWRCURR1 "Potencia-Entr p1"
+#define D_TPWRCURR2 "Potencia-Entr p2"
+#define D_TPWRCURR3 "Potencia-Entr p3"
+#define D_Strom_L1 "Corriente L1"
+#define D_Strom_L2 "Corriente L2"
+#define D_Strom_L3 "Corriente L3"
+#define D_Spannung_L1 "Voltaje L1"
+#define D_Spannung_L2 "Voltaje L2"
+#define D_Spannung_L3 "Voltaje L3"
+#define D_METERNR "Número de Medidor"
+#define D_METERSID "ID de Servicio"
+#define D_GasIN "Contador"
+#define D_H2oIN "Contador"
+#define D_StL1L2L3 "Corriente L1+L2+L3"
+#define D_SpL1L2L3 "Voltaje L1+L2+L3/3"
 
 // tasmota_template.h - keep them as short as possible to be able to fit them in GUI drop down box
 #define D_SENSOR_NONE          "Ninguno"
@@ -641,6 +660,10 @@
 #define D_SENSOR_HM10_TX       "HM10 TX"
 #define D_SENSOR_LE01MR_RX     "LE-01MR Rx"
 #define D_SENSOR_LE01MR_TX     "LE-01MR Tx"
+#define D_SENSOR_CC1101_GDO0   "CC1101 GDO0"
+#define D_SENSOR_CC1101_GDO2   "CC1101 GDO2"
+#define D_SENSOR_HRXL_RX       "HRXL Rx"
+#define D_SENSOR_ELECTRIQ_MOODL "MOODL Tx"
 
 // Units
 #define D_UNIT_AMPERE "A"

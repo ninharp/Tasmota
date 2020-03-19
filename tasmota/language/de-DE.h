@@ -79,6 +79,7 @@
 #define D_DATA "Daten"
 #define D_DARKLIGHT "dunkel"
 #define D_DEBUG "debug"
+#define D_DEWPOINT "Taupunkt"
 #define D_DISABLED "deaktiviert"
 #define D_DISTANCE "Abstand"
 #define D_DNS_SERVER "DNS-Server"
@@ -504,15 +505,33 @@
 
 //xsns_35_tx20.ino
 #define D_TX20_WIND_DIRECTION "Windrichtung"
-#define D_TX20_WIND_DEGREES "Windrichtung Grad"
 #define D_TX20_WIND_SPEED "Windgeschwindigkeit"
-#define D_TX20_WIND_SPEED_AVG "Windgeschwindigkeit Ø"
 #define D_TX20_WIND_SPEED_MIN "Windgeschwindigkeit Min"
 #define D_TX20_WIND_SPEED_MAX "Windgeschwindigkeit Max"
 #define D_TX20_NORTH "N"
 #define D_TX20_EAST "O"
 #define D_TX20_SOUTH "S"
 #define D_TX20_WEST "W"
+
+// xsns_53_sml.ino
+#define D_TPWRIN "Verbrauch"
+#define D_TPWROUT "Einspeisung"
+#define D_TPWRCURR "Aktueller Verbrauch"
+#define D_TPWRCURR1 "Verbrauch P1"
+#define D_TPWRCURR2 "Verbrauch P2"
+#define D_TPWRCURR3 "Verbrauch P3"
+#define D_Strom_L1 "Strom L1"
+#define D_Strom_L2 "Strom L2"
+#define D_Strom_L3 "Strom L3"
+#define D_Spannung_L1 "Spannung L1"
+#define D_Spannung_L2 "Spannung L2"
+#define D_Spannung_L3 "Spannung L3"
+#define D_METERNR "Zähler Nr"
+#define D_METERSID "Service ID"
+#define D_GasIN "Zählerstand"                // Gas-Verbrauch
+#define D_H2oIN "Zählerstand"                // H2o-Verbrauch
+#define D_StL1L2L3 "Ströme L1+L2+L3"
+#define D_SpL1L2L3 "Spannung L1+L2+L3/3"
 
 // tasmota_template.h - keep them as short as possible to be able to fit them in GUI drop down box
 #define D_SENSOR_NONE          "None"
@@ -641,6 +660,10 @@
 #define D_SENSOR_HM10_TX       "HM10 TX"
 #define D_SENSOR_LE01MR_RX     "LE-01MR Rx"
 #define D_SENSOR_LE01MR_TX     "LE-01MR Tx"
+#define D_SENSOR_CC1101_GDO0   "CC1101 GDO0"
+#define D_SENSOR_CC1101_GDO2   "CC1101 GDO2"
+#define D_SENSOR_HRXL_RX       "HRXL Rx"
+#define D_SENSOR_ELECTRIQ_MOODL "MOODL Tx"
 
 // Units
 #define D_UNIT_AMPERE "A"

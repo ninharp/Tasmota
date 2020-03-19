@@ -922,6 +922,17 @@ void WSContentSpaceButton(uint32_t title_index)
   WSContentButton(title_index);
 }
 
+void WSContentSend_THD(const char *types, float f_temperature, float f_humidity)
+{
+  char parameter[FLOATSZ];
+  dtostrfd(f_temperature, Settings.flag2.temperature_resolution, parameter);
+  WSContentSend_PD(HTTP_SNS_TEMP, types, parameter, TempUnit());
+  dtostrfd(f_humidity, Settings.flag2.humidity_resolution, parameter);
+  WSContentSend_PD(HTTP_SNS_HUM, types, parameter);
+  dtostrfd(CalcTempHumToDew(f_temperature, f_humidity), Settings.flag2.temperature_resolution, parameter);
+  WSContentSend_PD(HTTP_SNS_DEW, types, parameter, TempUnit());
+}
+
 void WSContentEnd(void)
 {
   WSContentFlush();                                // Flush chunk buffer
@@ -991,6 +1002,7 @@ void HandleWifiLogin(void)
   WSContentStop();
 }
 
+#ifdef USE_LIGHT
 void WebSliderColdWarm(void)
 {
   WSContentSend_P(HTTP_MSG_SLIDER_GRADIENT,  // Cold Warm
@@ -1001,6 +1013,7 @@ void WebSliderColdWarm(void)
     LightGetColorTemp(),
     't', 0);         // t0 - Value id releated to lc("t0", value) and WebGetArg("t0", tmp, sizeof(tmp));
 }
+#endif  // USE_LIGHT
 
 void HandleRoot(void)
 {
@@ -1151,7 +1164,7 @@ void HandleRoot(void)
         int32_t ShutterWebButton;
         if (ShutterWebButton = IsShutterWebButton(idx)) {
           WSContentSend_P(HTTP_DEVICE_CONTROL, 100 / devices_present, idx,
-            (set_button) ? SettingsText(SET_BUTTON1 + idx -1) : ((Settings.shutter_options[abs(ShutterWebButton)-1] & 2) /* is locked */ ? "-" : ((ShutterWebButton>0) ? "▲" : "▼")),
+            (set_button) ? SettingsText(SET_BUTTON1 + idx -1) : ((Settings.shutter_options[abs(ShutterWebButton)-1] & 2) /* is locked */ ? "-" : ((Settings.shutter_options[abs(ShutterWebButton)-1] & 8) /* invert web buttons */ ? ((ShutterWebButton>0) ? "▼" : "▲") : ((ShutterWebButton>0) ? "▲" : "▼"))),
             "");
           continue;
         }
@@ -1251,6 +1264,7 @@ bool HandleRootStatusRefresh(void)
     }
 #endif  // USE_SONOFF_IFAN
   }
+#ifdef USE_LIGHT
   WebGetArg("d0", tmp, sizeof(tmp));  // 0 - 100 Dimmer value
   if (strlen(tmp)) {
     snprintf_P(svalue, sizeof(svalue), PSTR(D_CMND_DIMMER " %s"), tmp);
@@ -1261,12 +1275,13 @@ bool HandleRootStatusRefresh(void)
     snprintf_P(svalue, sizeof(svalue), PSTR(D_CMND_WHITE " %s"), tmp);
     ExecuteWebCommand(svalue, SRC_WEBGUI);
   }
+  uint32_t light_device = LightDevice();  // Channel number offset
   uint32_t pwm_channels = (light_type & 7) > LST_MAX ? LST_MAX : (light_type & 7);
-  for (uint32_t j = 1; j <= pwm_channels; j++) {
-    snprintf_P(webindex, sizeof(webindex), PSTR("e%d"), j);
+  for (uint32_t j = 0; j < pwm_channels; j++) {
+    snprintf_P(webindex, sizeof(webindex), PSTR("e%d"), j +1);
     WebGetArg(webindex, tmp, sizeof(tmp));  // 0 - 100 percent
     if (strlen(tmp)) {
-      snprintf_P(svalue, sizeof(svalue), PSTR(D_CMND_CHANNEL "%d %s"), j, tmp);
+      snprintf_P(svalue, sizeof(svalue), PSTR(D_CMND_CHANNEL "%d %s"), j +light_device, tmp);
       ExecuteWebCommand(svalue, SRC_WEBGUI);
     }
   }
@@ -1285,6 +1300,7 @@ bool HandleRootStatusRefresh(void)
     snprintf_P(svalue, sizeof(svalue), PSTR(D_CMND_HSBCOLOR  "2 %s"), tmp);
     ExecuteWebCommand(svalue, SRC_WEBGUI);
   }
+#endif  // USE_LIGHT
 #ifdef USE_SHUTTER
   for (uint32_t j = 1; j <= shutters_present; j++) {
     snprintf_P(webindex, sizeof(webindex), PSTR("u%d"), j);
@@ -1882,6 +1898,7 @@ void HandleOtherConfiguration(void)
   }
 
 #ifdef USE_EMULATION
+#if defined(USE_EMULATION_WEMO) || defined(USE_EMULATION_HUE)
   WSContentSend_P(PSTR("<p></p><fieldset><legend><b>&nbsp;" D_EMULATION "&nbsp;</b></legend><p>"));  // Keep close to Friendlynames so do not use <br>
   for (uint32_t i = 0; i < EMUL_MAX; i++) {
 #ifndef USE_EMULATION_WEMO
@@ -1899,6 +1916,7 @@ void HandleOtherConfiguration(void)
     }
   }
   WSContentSend_P(PSTR("</p></fieldset>"));
+#endif  // USE_EMULATION_WEMO || USE_EMULATION_HUE
 #endif  // USE_EMULATION
 
   WSContentSend_P(HTTP_FORM_END);
@@ -1917,8 +1935,11 @@ void OtherSaveSettings(void)
   SettingsUpdateText(SET_WEBPWD, (!strlen(tmp)) ? "" : (strchr(tmp,'*')) ? SettingsText(SET_WEBPWD) : tmp);
   Settings.flag.mqtt_enabled = WebServer->hasArg("b1");  // SetOption3 - Enable MQTT
 #ifdef USE_EMULATION
+  UdpDisconnect();
+#if defined(USE_EMULATION_WEMO) || defined(USE_EMULATION_HUE)
   WebGetArg("b2", tmp, sizeof(tmp));
   Settings.flag2.emulation = (!strlen(tmp)) ? 0 : atoi(tmp);
+#endif  // USE_EMULATION_WEMO || USE_EMULATION_HUE
 #endif  // USE_EMULATION
 
   snprintf_P(message, sizeof(message), PSTR(D_LOG_OTHER D_MQTT_ENABLE " %s, " D_CMND_EMULATION " %d, " D_CMND_FRIENDLYNAME), GetStateText(Settings.flag.mqtt_enabled), Settings.flag2.emulation);
@@ -1931,17 +1952,26 @@ void OtherSaveSettings(void)
   }
   AddLog_P(LOG_LEVEL_INFO, message);
 
+/*
+  // This sometimes provides intermittent watchdog
+  bool template_activate = WebServer->hasArg("t2");  // Try this to tackle intermittent watchdog after execution of Template command
   WebGetArg("t1", tmp, sizeof(tmp));
   if (strlen(tmp)) {  // {"NAME":"12345678901234","GPIO":[255,255,255,255,255,255,255,255,255,255,255,255,255],"FLAG":255,"BASE":255}
     char svalue[128];
     snprintf_P(svalue, sizeof(svalue), PSTR(D_CMND_TEMPLATE " %s"), tmp);
     ExecuteWebCommand(svalue, SRC_WEBGUI);
 
-    if (WebServer->hasArg("t2")) {
+    if (template_activate) {
       snprintf_P(svalue, sizeof(svalue), PSTR(D_CMND_MODULE " 0"));
       ExecuteWebCommand(svalue, SRC_WEBGUI);
     }
-
+  }
+  // Try async execution of commands
+*/
+  WebGetArg("t1", tmp, sizeof(tmp));
+  if (strlen(tmp)) {  // {"NAME":"12345678901234","GPIO":[255,255,255,255,255,255,255,255,255,255,255,255,255],"FLAG":255,"BASE":255}
+    snprintf_P(message, sizeof(message), PSTR(D_CMND_BACKLOG " " D_CMND_TEMPLATE " %s%s"), tmp, (WebServer->hasArg("t2")) ? "; " D_CMND_MODULE " 0" : "");
+    ExecuteWebCommand(message, SRC_WEBGUI);
   }
 }
 
