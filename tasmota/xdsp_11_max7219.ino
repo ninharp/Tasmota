@@ -53,16 +53,18 @@
 
 MD_Parola *P;
 
-class MAX7219_renderer {
+
+class MAX7219_renderer : public Renderer {
+  public:
+    MAX7219_renderer(MD_Parola *rdr, uint8_t deviceCount);
   private:
     MD_Parola *max7219;
-  public:
-    MAX7219_renderer(MD_Parola*);
-
-  MAX7219_renderer(MD_Parola *rdr) {
-    max7219 = rdr;
-  }
 };
+
+MAX7219_renderer::MAX7219_renderer(MD_Parola *rdr, uint8_t deviceCount) : Renderer(MAX_DEVICES, 1)  {
+    max7219 = new MD_Parola(HARDWARE_TYPE, pin[GPIO_SPI_CS], (deviceCount <= 0) ? 1 : deviceCount); //Settings.display_cols[0] );
+    rdr = max7219;
+}
 
 /*********************************************************************************************/
 
@@ -79,6 +81,7 @@ void MAX7219InitDriver(void)
     uint8_t deviceCount = (uint8_t)Settings.display_cols[0];
     if  ((pin[GPIO_SPI_CS]<99) && (pin[GPIO_SPI_MOSI]<99) && (pin[GPIO_SPI_CLK]<99)){
        P = new MD_Parola(HARDWARE_TYPE, pin[GPIO_SPI_CS], (deviceCount <= 0) ? 1 : deviceCount); //Settings.display_cols[0] );
+       //renderer = new MAX7219_renderer(P, deviceCount);
     } else {
       return;
     }
